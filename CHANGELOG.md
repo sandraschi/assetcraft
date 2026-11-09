@@ -1,0 +1,7 @@
+# Changelog
+
+## 0.1.0 - 2026-11-09
+
+- Tier 1: assetcraft-store (assets, categories with minimum life, maintenance, licences with seats, deadlines, AfA postings; triggers freeze the posted AfA basis and disposed assets), assetcraft-core (AfA engine with Halbjahres-AfA and GWG, buchcraft event, disposal, licence audit, expiries, QR SVG labels, all-or-nothing CSV import, demo seed), `assetcraft` binary (CLI with `--json`, MCP stdio, 24 tools).
+- 21 tests; live chain verified: `afa --emit` -> buchcraft `inbox-drain` -> draft approved -> entry SO-2026-0001 booked.
+- Fix before release: start-of-year book value showed 0,00 for assets put in service this year.
