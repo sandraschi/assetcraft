@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AssetCraft v0.1.1 — Technical Brochure &amp; Operator Handbook</title>
+  <meta name="author" content="Sandra Schipal" />
+  <style>
+    @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 10.2pt;
+      margin: 0;
+      padding: 0;
+    }
+    .cover {
+      background: linear-gradient(145deg, #090d16 0%, #0f172a 55%, #0c4a6e 100%);
+      color: #f8fafc;
+      padding: 44px 40px 48px 40px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      page-break-after: always;
+    }
+    .cover-kicker {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.18);
+      border: 1px solid #38bdf8;
+      color: #7dd3fc;
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+    .cover h1 {
+      font-size: 32pt;
+      line-height: 1.1;
+      margin: 0 0 12px 0;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+    .cover h2 {
+      font-size: 13.5pt;
+      font-weight: 400;
+      color: #bae6fd;
+      margin: 0 0 26px 0;
+    }
+    .cover-grid {
+      display: table;
+      width: 100%;
+      margin-top: 22px;
+      border-collapse: separate;
+      border-spacing: 10px;
+    }
+    .cover-stat {
+      display: table-cell;
+      width: 25%;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(125, 211, 252, 0.35);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .cover-stat .num {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #38bdf8;
+      display: block;
+    }
+    .cover-stat .lbl {
+      font-size: 8pt;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .cover-footer {
+      margin-top: 28px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
+      font-size: 9pt;
+      color: #94a3b8;
+    }
+    h2.section-title {
+      font-size: 15pt;
+      color: #0c4a6e;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 5px;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      font-size: 11.5pt;
+      color: #0f172a;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+    p { margin: 0 0 9px 0; }
+    ul { margin: 6px 0 12px 0; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px 0;
+      font-size: 9pt;
+    }
+    table.data-table th {
+      background: #0f172a;
+      color: #f8fafc;
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: 700;
+    }
+    table.data-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    table.data-table tr:nth-child(even) td { background: #f8fafc; }
+    code, pre {
+      font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+      font-size: 8.8pt;
+    }
+    code {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 11px 14px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <div class="cover-kicker">ArtCraft Fleet Technical Brochure &middot; Series #23</div>
+    <h1>AssetCraft v0.1.1</h1>
+    <h2>Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).</h2>
+
+    <svg viewBox="0 0 760 165" width="100%" height="165" xmlns="http://www.w3.org/2000/svg" style="margin: 10px 0 16px 0;">
+      <rect x="2" y="2" width="756" height="161" rx="12" fill="#0b1322" stroke="#38bdf8" stroke-width="1.5"/>
+      <rect x="24" y="22" width="200" height="120" rx="8" fill="#1e293b" stroke="#67e8f9" stroke-width="1.5"/>
+      <text x="124" y="52" fill="#67e8f9" font-size="13" font-weight="bold" text-anchor="middle">L3: assetcraft-app</text>
+      <text x="124" y="76" fill="#e2e8f0" font-size="10" text-anchor="middle">Native eframe/egui Studio</text>
+      <text x="124" y="98" fill="#94a3b8" font-size="9.5" text-anchor="middle">In-Process Core Dispatch</text>
+      <text x="124" y="118" fill="#34d399" font-size="9.5" text-anchor="middle">Zero HTTP / Port Overhead</text>
+
+      <rect x="280" y="22" width="200" height="120" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="380" y="52" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">L2: assetcraft-mcp</text>
+      <text x="380" y="76" fill="#e2e8f0" font-size="10" text-anchor="middle">CLI + Stdio MCP 2024-11-05</text>
+      <text x="380" y="98" fill="#94a3b8" font-size="9.5" text-anchor="middle">Human Verbs &amp; Agent Tools</text>
+      <text x="380" y="118" fill="#34d399" font-size="9.5" text-anchor="middle">Deterministic JSON Output</text>
+
+      <rect x="536" y="22" width="200" height="120" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+      <text x="636" y="52" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">L1: assetcraft-core</text>
+      <text x="636" y="76" fill="#e2e8f0" font-size="10" text-anchor="middle">Single dispatch() Engine</text>
+      <text x="636" y="98" fill="#fcd34d" font-size="9.5" text-anchor="middle">deny(unwrap/expect/panic)</text>
+      <text x="636" y="118" fill="#94a3b8" font-size="9.5" text-anchor="middle">Pre-Write Backups &amp; Guards</text>
+
+      <line x1="224" y1="82" x2="280" y2="82" stroke="#38bdf8" stroke-width="2"/>
+      <line x1="480" y1="82" x2="536" y2="82" stroke="#10b981" stroke-width="2"/>
+    </svg>
+
+    <div class="cover-grid">
+      <div class="cover-stat">
+        <span class="num">v0.1.1</span>
+        <span class="lbl">Release Version</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">3 Crates</span>
+        <span class="lbl">Workspace Tiers</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">3688</span>
+        <span class="lbl">Pure-Rust LOC</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">6-Gate</span>
+        <span class="lbl">ArtCraft Verified</span>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <strong>Repository:</strong> <code>D:\Dev\repos\assetcraft</code> &middot;
+      <strong>Standard:</strong> <code>CRAFT_BROCHURE_STANDARD.md</code> &middot;
+      <strong>Compiled via:</strong> <code>BookCraft v0.5.0</code>
+    </div>
+  </div>
+
+  <p>Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).</p>
+<p>Status: <strong>v0.1.1, Tier 1</strong> (store + CLI + MCP, tested). No desktop window yet. Synthetic demo data only; AfA rules not reviewed by a Steuerberater.</p>
+<ul>
+<li>How to use it day to day: HELP.md</li>
+<li>What it is for and where it stops: docs/PRD.md</li>
+<li>Every MCP tool: docs/TOOLS.md (generated, checked by a test)</li>
+<li>Changes: CHANGELOG.md</li>
+</ul>
+<h2 class="section-title">What it does</h2>
+<ul>
+<li><strong>Assets:</strong> tag, category, in-service date, cost (the AfA base), holder, location, serial, warranty, supplier, invoice reference, maintenance log.</li>
+<li><strong>AfA (EStG section 7), in cents:</strong> straight-line, calendar fiscal year, Halbjahres-AfA in the first and in the disposal year, GWG write-off at or below the limit (default 1.000,00 since 2023, configurable). The remainder cent goes to the final year, so a schedule always sums to the cost and never grows a stray year.</li>
+<li><strong>Categories:</strong> default life and minimum life (cars: at least 8 years, EStG section 8(6)) and the EKR asset account (IT 0620, car 0630, BGA 0660, GWG 0680). Editable.</li>
+<li><strong>buchcraft link:</strong> <code>afa 2026 --emit</code> sends one <code>asset.depreciation_due</code> per asset to buchcraft (7000 or 7010 against the asset account). buchcraft turns them into drafts a human approves. Each asset/year is sent once; after that the AfA basis is frozen (in code and by a SQLite trigger).</li>
+<li><strong>Disposal:</strong> disposal-year AfA, book value, gain or loss; the asset becomes read-only.</li>
+<li><strong>Licences:</strong> seats, assignments (refused when full unless forced), renewal dates, cost per used seat. Keys are never stored, only where they live; a pasted key is refused.</li>
+<li><strong>Expiries:</strong> warranties, licence renewals and deadlines (certificates, domains, insurance, inspections) due within N days, overdue first.</li>
+<li><strong>Labels:</strong> printable 60 x 25 mm SVG with a QR code (<code>ASSET:&lt;tag&gt;</code>).</li>
+<li><strong>CSV import:</strong> <code>tag;name;category;in_service;cost[;serial;location;holder]</code>, all-or-nothing, with <code>--dry-run</code>. Gets a real inventory in on day one.</li>
+</ul>
+<h2 class="section-title">Quick start</h2>
+<pre>
+assetcraft demo-seed
+assetcraft list
+assetcraft schedule NAS-001
+assetcraft afa 2026                      # preview
+assetcraft afa 2026 --emit               # drafts for buchcraft
+buchcraft inbox-drain; buchcraft drafts list; buchcraft drafts approve 3
+assetcraft expiries --days 60
+assetcraft license audit
+assetcraft add GOL-002 &quot;Mini PC&quot; --category it --in-service 09.11.2026 --cost &quot;689,00&quot;
+assetcraft label GOL-001 D:\Temp\gol-001.svg
+assetcraft import D:\Temp\inventory.csv --dry-run
+</pre>
+<p>Database: <code>--db PATH</code>, else <code>$ASSETCRAFT_DB</code>, else <code>%LOCALAPPDATA%\assetcraft\assetcraft.db</code>.</p>
+<h2 class="section-title">MCP</h2>
+<pre>
+{ &quot;mcpServers&quot;: { &quot;assetcraft&quot;: { &quot;command&quot;: &quot;D:/Dev/cargo-target/release/assetcraft.exe&quot;, &quot;args&quot;: [&quot;mcp&quot;, &quot;--allow-path&quot;, &quot;D:/Dev/assetcraft-files&quot;] } } }
+</pre>
+<p>24 tools, all <code>asset_*</code>; see docs/TOOLS.md.</p>
+<h2 class="section-title">Build</h2>
+<pre>
+just ci
+just build-release
+</pre>
+<p>Needs <code>../craft-biz</code> checked out next to this repo.</p>
+<h2 class="section-title">Not done (honest list)</h2>
+<ul>
+<li>No egui desktop app.</li>
+<li>Degressive AfA (section 7(1a)), Luxustangente for cars (40.000 EUR cap), investment allowance (IFB) and non-calendar fiscal years are not modelled.</li>
+<li>Disposal sends no event: book the residual value (Anlagenabgang) and proceeds in buchcraft yourself.</li>
+<li>No direct import from rust-devices-mcp or winops inventory yet; export those to CSV and use <code>import</code>.</li>
+<li>Label is SVG only (print from a browser); no label-printer driver.</li>
+</ul>
+
+  <div class="page-break"></div><h2 class="section-title">Product Requirements &amp; Architecture Specification</h2><h2 class="section-title">What it is</h2>
+<p>Fixed assets with Austrian AfA, software licences and expiry dates for a small business. Pure Rust, ArtCraft pattern. Suite plan: <code>BACKOFFICE_CRAFT_SUITE.md</code>, section 4.4.</p>
+<h2 class="section-title">Users</h2>
+<ul>
+<li>The owner who has to know what the business owns, what it is worth and what expires.</li>
+<li>Agents over MCP: register purchases, run the year-end AfA, watch expiries and licence seats.</li>
+<li>buchcraft (via the bus) and, through it, the Steuerberater.</li>
+</ul>
+<h2 class="section-title">Jobs</h2>
+<p>1. Register assets once and get a correct AfA plan.</p>
+<p>2. Post year-end AfA to the books without retyping.</p>
+<p>3. Not overpay or under-license software.</p>
+<p>4. Never miss a warranty, certificate, domain, insurance or inspection date.</p>
+<h2 class="section-title">Today (v0.1.0)</h2>
+<ul>
+<li>Assets with categories (default and minimum life, EKR account), maintenance log, disposal with gain/loss.</li>
+<li>AfA engine in cents: Halbjahres-AfA, GWG with configurable limit, remainder to the final year.</li>
+<li><code>afa --emit</code> -&gt; buchcraft drafts -&gt; approved -&gt; booked (verified end to end); posted AfA basis frozen by trigger.</li>
+<li>Licences with seats, assignment guard, audit; keys never stored.</li>
+<li>Expiries across warranties, renewals and deadlines; QR SVG labels; all-or-nothing CSV import.</li>
+<li>24 MCP tools (TOOLS.md, generated and test-checked).</li>
+</ul>
+<h2 class="section-title">Boundaries</h2>
+<ul>
+<li>Calendar fiscal year, straight-line AfA only.</li>
+<li>No direct booking: buchcraft receives drafts that a human approves.</li>
+<li>Not tax advice; categories and lives are defaults to check with the Steuerberater.</li>
+</ul>
+<h2 class="section-title">Gaps (honest)</h2>
+<ul>
+<li>No egui window.</li>
+<li>Degressive AfA, Luxustangente (car cost cap), IFB and non-calendar fiscal years not modelled.</li>
+<li>Disposal sends no event (residual value booked by hand).</li>
+<li>No direct import from rust-devices-mcp or winops inventory (CSV only).</li>
+<li>SVG labels only, no label-printer driver; synthetic data only.</li>
+</ul>
+<h2 class="section-title">Next</h2>
+<p>1. egui app: register table, asset detail with schedule chart, expiry board, label print.</p>
+<p>2. Steuerberater review; degressive AfA as an option.</p>
+<p>3. Real inventory import from the fleet (Goliath, robots, plugs).</p>
+
+  <div class="page-break"></div><h2 class="section-title">Complete MCP Tool &amp; CLI Verb Reference</h2><p>Generated by <code>assetcraft tools --markdown</code>. Do not edit by hand: a test fails when this file</p>
+<p>is out of date. Every tool is also a CLI verb (<code>assetcraft --help</code>). Dotted names (<code>app.verb</code>) are accepted.</p>
+<table class="data-table"><thead><tr>
+<th>Tool</th>
+<th>What it does</th>
+<th>Required</th>
+<th>Optional</th>
+</tr></thead><tbody>
+<tr>
+<td><code>asset_status</code></td>
+<td>Counts, cost of active assets, licence seats, open deadlines, GWG limit.</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_add</code></td>
+<td>Register an asset. cost is the AfA base (net if VAT is deductible). GWG is automatic at or below the limit unless gwg=false. Life defaults from the category; cars need at least 8 years.</td>
+<td><code>tag</code>, <code>name</code>, <code>in_service</code>, <code>cost</code></td>
+<td><code>category</code>, <code>gwg</code>, <code>holder</code>, <code>invoice_ref</code>, <code>life_years</code>, <code>location</code>, <code>notes</code>, <code>purchase_date</code>, <code>serial</code>, <code>supplier</code>, <code>warranty_until</code></td>
+</tr>
+<tr>
+<td><code>asset_list</code></td>
+<td>List assets with book value at the start of this year.</td>
+<td>-</td>
+<td><code>category</code>, <code>include_disposed</code>, <code>text</code></td>
+</tr>
+<tr>
+<td><code>asset_show</code></td>
+<td>One asset with AfA schedule, postings to buchcraft, maintenance and deadlines.</td>
+<td><code>tag</code></td>
+<td><code>as_of</code></td>
+</tr>
+<tr>
+<td><code>asset_update</code></td>
+<td>Change fields; null clears serial/location/holder/warranty_until. cost/in_service/life_years/gwg are frozen once AfA was posted.</td>
+<td><code>tag</code></td>
+<td><code>cost</code>, <code>gwg</code>, <code>holder</code>, <code>in_service</code>, <code>life_years</code>, <code>location</code>, <code>name</code>, <code>notes</code>, <code>serial</code>, <code>warranty_until</code></td>
+</tr>
+<tr>
+<td><code>asset_dispose</code></td>
+<td>Retire an asset (sold, scrapped). Returns disposal-year AfA, book value and gain/loss. The asset becomes read-only.</td>
+<td><code>tag</code>, <code>date</code></td>
+<td><code>note</code>, <code>proceeds</code></td>
+</tr>
+<tr>
+<td><code>asset_afa_schedule</code></td>
+<td>Straight-line AfA plan in cents with Halbjahres-AfA and GWG.</td>
+<td><code>tag</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_afa_year</code></td>
+<td>AfA for all assets in a year with totals per account. emit=true sends asset.depreciation_due to buchcraft (drafts there, approved by a human); each asset/year is sent once.</td>
+<td>-</td>
+<td><code>emit</code>, <code>year</code></td>
+</tr>
+<tr>
+<td><code>asset_maintenance_add</code></td>
+<td>Log a repair, service or inspection with cost.</td>
+<td><code>tag</code>, <code>kind</code></td>
+<td><code>cost</code>, <code>date</code>, <code>note</code></td>
+</tr>
+<tr>
+<td><code>asset_category_list</code></td>
+<td>Categories with default life, minimum life and EKR asset account.</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_category_set</code></td>
+<td>Create or change a category (life 1-50, minimum life, EKR account).</td>
+<td><code>name</code>, <code>life_years</code>, <code>account</code></td>
+<td><code>min_years</code></td>
+</tr>
+<tr>
+<td><code>asset_gwg_limit</code></td>
+<td>Show or set the GWG limit (default 1.000,00 since 2023).</td>
+<td>-</td>
+<td><code>set</code></td>
+</tr>
+<tr>
+<td><code>asset_license_add</code></td>
+<td>Register a software licence. Never pass the key itself: key_location says where it is stored.</td>
+<td><code>name</code>, <code>seats</code></td>
+<td><code>annual_cost</code>, <code>key_location</code>, <code>notes</code>, <code>renews_on</code>, <code>vendor</code></td>
+</tr>
+<tr>
+<td><code>asset_license_list</code></td>
+<td>Licences with assigned seats.</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_license_assign</code></td>
+<td>Give a person a seat. Refused when full unless force=true.</td>
+<td><code>license</code>, <code>assignee</code></td>
+<td><code>force</code></td>
+</tr>
+<tr>
+<td><code>asset_license_unassign</code></td>
+<td>Free a seat.</td>
+<td><code>license</code>, <code>assignee</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_license_seats</code></td>
+<td>Change the number of seats.</td>
+<td><code>license</code>, <code>seats</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_license_audit</code></td>
+<td>Over-allocated and unused seats, renewals due within 60 days, cost per used seat.</td>
+<td>-</td>
+<td><code>as_of</code></td>
+</tr>
+<tr>
+<td><code>asset_deadline_add</code></td>
+<td>Track a certificate, domain, insurance, inspection or contract date, optionally tied to an asset.</td>
+<td><code>name</code>, <code>due_on</code></td>
+<td><code>kind</code>, <code>notes</code>, <code>tag</code></td>
+</tr>
+<tr>
+<td><code>asset_deadline_done</code></td>
+<td>Mark a deadline handled.</td>
+<td><code>id</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_expiries</code></td>
+<td>Warranties, licence renewals and deadlines due within N days (default 60), overdue first.</td>
+<td>-</td>
+<td><code>as_of</code>, <code>within_days</code></td>
+</tr>
+<tr>
+<td><code>asset_label</code></td>
+<td>Write a printable SVG label with a QR code (ASSET:&lt;tag&gt;) for an asset.</td>
+<td><code>tag</code>, <code>path</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>asset_import_csv</code></td>
+<td>Import assets from CSV tag;name;category;in_service;cost[;serial;location;holder]. All-or-nothing; dry_run validates only.</td>
+<td><code>path</code></td>
+<td><code>dry_run</code></td>
+</tr>
+<tr>
+<td><code>asset_demo_seed</code></td>
+<td>Fill an EMPTY register with a labelled demo inventory, licences and deadlines.</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody></table>
+
+</body>
+</html>
