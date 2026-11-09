@@ -2,7 +2,12 @@
 
 Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).
 
-Status: **v0.1.0, Tier 1** (store + CLI + MCP, tested). No desktop window yet. Synthetic demo data only; AfA rules not reviewed by a Steuerberater.
+Status: **v0.1.1, Tier 1** (store + CLI + MCP, tested). No desktop window yet. Synthetic demo data only; AfA rules not reviewed by a Steuerberater.
+
+- How to use it day to day: [HELP.md](HELP.md)
+- What it is for and where it stops: [docs/PRD.md](docs/PRD.md)
+- Every MCP tool: [docs/TOOLS.md](docs/TOOLS.md) (generated, checked by a test)
+- Changes: [CHANGELOG.md](CHANGELOG.md)
 
 ## What it does
 
@@ -40,7 +45,7 @@ Database: `--db PATH`, else `$ASSETCRAFT_DB`, else `%LOCALAPPDATA%\assetcraft\as
 { "mcpServers": { "assetcraft": { "command": "D:/Dev/cargo-target/release/assetcraft.exe", "args": ["mcp", "--allow-path", "D:/Dev/assetcraft-files"] } } }
 ```
 
-24 tools, all `asset_*`.
+24 tools, all `asset_*`; see [docs/TOOLS.md](docs/TOOLS.md).
 
 ## Build
 

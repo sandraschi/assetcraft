@@ -63,7 +63,7 @@ dependencies = [
 
 [[package]]
 name = "assetcraft-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assetcraft-store",
  "chrono",
@@ -75,7 +75,7 @@ dependencies = [
 
 [[package]]
 name = "assetcraft-mcp"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assetcraft-core",
  "assetcraft-store",
@@ -86,7 +86,7 @@ dependencies = [
 
 [[package]]
 name = "assetcraft-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "rusqlite",

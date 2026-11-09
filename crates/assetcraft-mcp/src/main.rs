@@ -14,8 +14,18 @@ use serde_json::{json, Map, Value};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+const AFTER_HELP: &str = "Typical year:
+  assetcraft add GOL-002 \"Mini PC\" --category it --in-service 09.11.2026 --cost \"689,00\"
+  assetcraft schedule GOL-002
+  assetcraft afa 2026                          # preview; --emit sends drafts to buchcraft
+  assetcraft expiries --days 60
+  assetcraft license audit
+  assetcraft dispose LAP-001 --date 30.04.2026 --proceeds \"150,00\"
+  assetcraft import D:\\Temp\\inventory.csv --dry-run
+See HELP.md for workflows and docs/TOOLS.md for every MCP tool.";
+
 #[derive(Parser)]
-#[command(
+#[command(after_help = AFTER_HELP,
     name = "assetcraft",
     version,
     about = "Fixed assets with Austrian AfA, licences and expiry dates. CLI + MCP."
@@ -164,8 +174,11 @@ enum Cmd {
     },
     /// Fill an empty register with the labelled demo inventory.
     DemoSeed,
-    /// Print the MCP tool catalog.
-    Tools,
+    /// Print the MCP tool catalog (JSON, or markdown for docs/TOOLS.md).
+    Tools {
+        #[arg(long)]
+        markdown: bool,
+    },
     /// Run the MCP stdio server.
     Mcp,
 }
@@ -442,7 +455,7 @@ fn to_tool(cmd: Cmd) -> Result<(&'static str, Value), String> {
             json!({ "path": path, "dry_run": dry_run }),
         ),
         Cmd::DemoSeed => ("asset_demo_seed", json!({})),
-        Cmd::Tools | Cmd::Mcp => return Err("not a tool verb".into()),
+        Cmd::Tools { .. } | Cmd::Mcp => return Err("not a tool verb".into()),
     })
 }
 
@@ -624,7 +637,11 @@ fn render(v: &Value) -> String {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    if matches!(cli.cmd, Cmd::Tools) {
+    if let Cmd::Tools { markdown } = cli.cmd {
+        if markdown {
+            print!("{}", craft_biz::mcp::tools_markdown(APP, &tools()));
+            return ExitCode::SUCCESS;
+        }
         println!(
             "{}",
             serde_json::to_string_pretty(&tools()).unwrap_or_default()
@@ -696,6 +713,15 @@ fn main() -> ExitCode {
 mod tests {
     use super::*;
     use craft_biz::mcp::handle_line;
+
+    #[test]
+    fn tools_doc_is_current() {
+        let committed = include_str!("../../../docs/TOOLS.md");
+        assert!(
+            craft_biz::mcp::docs_in_sync(committed, &craft_biz::mcp::tools_markdown(APP, &tools())),
+            "docs/TOOLS.md is stale: run `just docs`"
+        );
+    }
 
     fn host() -> Host {
         let reg = Registry::open_in_memory().unwrap();
