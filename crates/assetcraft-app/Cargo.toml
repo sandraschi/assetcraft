@@ -1,0 +1,22 @@
+[package]
+name = "assetcraft-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+assetcraft-core = { path = "../assetcraft-core" }
+assetcraft-store = { path = "../assetcraft-store" }
+craft-biz = { workspace = true }
+craft-biz-ui = { workspace = true }
+eframe = { workspace = true }
+egui = { workspace = true }
+clap = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+qrcode = { workspace = true }
+
+[lints]
+workspace = true
