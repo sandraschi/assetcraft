@@ -10,7 +10,11 @@ use eframe::egui::{self, Color32, RichText};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(name = "assetcraft-app", version, about = "Desktop workstation for Asset Registry & AfA Depreciation")]
+#[command(
+    name = "assetcraft-app",
+    version,
+    about = "Desktop workstation for Asset Registry & AfA Depreciation"
+)]
 struct Cli {
     /// Database file path.
     #[arg(long)]
@@ -98,7 +102,10 @@ impl AppState {
             self.categories = cats;
         }
 
-        if let Ok(items) = self.reg.assets(self.filter_category.as_deref(), self.include_disposed, text) {
+        if let Ok(items) =
+            self.reg
+                .assets(self.filter_category.as_deref(), self.include_disposed, text)
+        {
             if self.selected_asset.is_none() {
                 if let Some(first) = items.first() {
                     self.select_asset(first.clone());
@@ -135,9 +142,15 @@ impl AppState {
             return;
         }
         let today = Local::now().date_naive();
-        match self.reg.assign(lic_name, self.assignee_input.trim(), today, false) {
+        match self
+            .reg
+            .assign(lic_name, self.assignee_input.trim(), today, false)
+        {
             Ok(_) => {
-                self.status_msg = Some(format!("Assigned seat on {lic_name} to {}", self.assignee_input.trim()));
+                self.status_msg = Some(format!(
+                    "Assigned seat on {lic_name} to {}",
+                    self.assignee_input.trim()
+                ));
                 self.assignee_input.clear();
                 self.reload_data();
             }
@@ -171,7 +184,10 @@ impl eframe::App for AppState {
                     .color(Color32::from_rgb(56, 189, 248))
                     .strong(),
             );
-            ui.label(RichText::new("• Hardware & Software Inventory, AfA Depreciation, and QR Tags").italics());
+            ui.label(
+                RichText::new("• Hardware & Software Inventory, AfA Depreciation, and QR Tags")
+                    .italics(),
+            );
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("⟳ Refresh").clicked() {
@@ -195,7 +211,9 @@ impl eframe::App for AppState {
             });
             ui.group(|ui| {
                 ui.label(RichText::new("Acquisition Cost:").color(Color32::GRAY));
-                ui.label(RichText::new(format!("€{:.2}", total_cost_cents as f64 / 100.0)).strong());
+                ui.label(
+                    RichText::new(format!("€{:.2}", total_cost_cents as f64 / 100.0)).strong(),
+                );
             });
             ui.group(|ui| {
                 ui.label(RichText::new("Software Licenses:").color(Color32::GRAY));
@@ -219,16 +237,37 @@ impl eframe::App for AppState {
 
         // Tab Navigation
         ui.horizontal(|ui| {
-            if ui.selectable_label(self.current_tab == ActiveTab::Assets, "💻 Asset Registry").clicked() {
+            if ui
+                .selectable_label(self.current_tab == ActiveTab::Assets, "💻 Asset Registry")
+                .clicked()
+            {
                 self.current_tab = ActiveTab::Assets;
             }
-            if ui.selectable_label(self.current_tab == ActiveTab::AfaDepreciation, "📉 AfA Depreciation Cockpit").clicked() {
+            if ui
+                .selectable_label(
+                    self.current_tab == ActiveTab::AfaDepreciation,
+                    "📉 AfA Depreciation Cockpit",
+                )
+                .clicked()
+            {
                 self.current_tab = ActiveTab::AfaDepreciation;
             }
-            if ui.selectable_label(self.current_tab == ActiveTab::Licenses, "🔑 Software Licenses & Seats").clicked() {
+            if ui
+                .selectable_label(
+                    self.current_tab == ActiveTab::Licenses,
+                    "🔑 Software Licenses & Seats",
+                )
+                .clicked()
+            {
                 self.current_tab = ActiveTab::Licenses;
             }
-            if ui.selectable_label(self.current_tab == ActiveTab::Labels, "🏷 QR Labels & Barcodes").clicked() {
+            if ui
+                .selectable_label(
+                    self.current_tab == ActiveTab::Labels,
+                    "🏷 QR Labels & Barcodes",
+                )
+                .clicked()
+            {
                 self.current_tab = ActiveTab::Labels;
             }
         });
@@ -259,11 +298,20 @@ impl AppState {
             egui::ComboBox::from_id_salt("cat_filter")
                 .selected_text(self.filter_category.as_deref().unwrap_or("All Categories"))
                 .show_ui(ui, |ui| {
-                    if ui.selectable_label(self.filter_category.is_none(), "All Categories").clicked() {
+                    if ui
+                        .selectable_label(self.filter_category.is_none(), "All Categories")
+                        .clicked()
+                    {
                         cat_switch = Some(None);
                     }
                     for c in &self.categories {
-                        if ui.selectable_label(self.filter_category.as_deref() == Some(&c.name), &c.name).clicked() {
+                        if ui
+                            .selectable_label(
+                                self.filter_category.as_deref() == Some(&c.name),
+                                &c.name,
+                            )
+                            .clicked()
+                        {
                             cat_switch = Some(Some(c.name.clone()));
                         }
                     }
@@ -273,7 +321,10 @@ impl AppState {
                 self.reload_data();
             }
 
-            if ui.checkbox(&mut self.include_disposed, "Include Disposed").changed() {
+            if ui
+                .checkbox(&mut self.include_disposed, "Include Disposed")
+                .changed()
+            {
                 self.reload_data();
             }
         });
@@ -288,39 +339,42 @@ impl AppState {
                 ui.heading("Hardware & Asset Inventory");
                 ui.add_space(4.0);
 
-                egui::ScrollArea::vertical().id_salt("asset_scroll").show(ui, |ui| {
-                    egui::Grid::new("asset_grid")
-                        .striped(true)
-                        .min_col_width(80.0)
-                        .show(ui, |ui| {
-                            ui.strong("Tag");
-                            ui.strong("Name");
-                            ui.strong("Category");
-                            ui.strong("Holder");
-                            ui.strong("Cost");
-                            ui.strong("Status");
-                            ui.end_row();
-
-                            for a in &self.assets {
-                                let is_sel = self.selected_asset.as_ref().map(|s| &s.tag) == Some(&a.tag);
-                                if ui.selectable_label(is_sel, &a.tag).clicked() {
-                                    next_selected = Some(a.clone());
-                                }
-                                ui.label(&a.name);
-                                ui.label(&a.category);
-                                ui.label(a.holder.as_deref().unwrap_or("—"));
-                                ui.label(format!("€{:.2}", a.cost_cents as f64 / 100.0));
-                                if a.disposed_on.is_some() {
-                                    render_badge(ui, "Disposed", Color32::GRAY);
-                                } else if a.gwg {
-                                    render_badge(ui, "GWG", Color32::from_rgb(245, 158, 11));
-                                } else {
-                                    render_badge(ui, "Active", Color32::from_rgb(34, 197, 94));
-                                }
+                egui::ScrollArea::vertical()
+                    .id_salt("asset_scroll")
+                    .show(ui, |ui| {
+                        egui::Grid::new("asset_grid")
+                            .striped(true)
+                            .min_col_width(80.0)
+                            .show(ui, |ui| {
+                                ui.strong("Tag");
+                                ui.strong("Name");
+                                ui.strong("Category");
+                                ui.strong("Holder");
+                                ui.strong("Cost");
+                                ui.strong("Status");
                                 ui.end_row();
-                            }
-                        });
-                });
+
+                                for a in &self.assets {
+                                    let is_sel = self.selected_asset.as_ref().map(|s| &s.tag)
+                                        == Some(&a.tag);
+                                    if ui.selectable_label(is_sel, &a.tag).clicked() {
+                                        next_selected = Some(a.clone());
+                                    }
+                                    ui.label(&a.name);
+                                    ui.label(&a.category);
+                                    ui.label(a.holder.as_deref().unwrap_or("-"));
+                                    ui.label(format!("€{:.2}", a.cost_cents as f64 / 100.0));
+                                    if a.disposed_on.is_some() {
+                                        render_badge(ui, "Disposed", Color32::GRAY);
+                                    } else if a.gwg {
+                                        render_badge(ui, "GWG", Color32::from_rgb(245, 158, 11));
+                                    } else {
+                                        render_badge(ui, "Active", Color32::from_rgb(34, 197, 94));
+                                    }
+                                    ui.end_row();
+                                }
+                            });
+                    });
             });
 
             // Right Column: Asset Details & Maintenance Drawer
@@ -330,13 +384,32 @@ impl AppState {
 
                 if let Some(ref a) = self.selected_asset {
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new(&a.tag).color(Color32::from_rgb(56, 189, 248)).size(18.0).strong());
+                        ui.label(
+                            RichText::new(&a.tag)
+                                .color(Color32::from_rgb(56, 189, 248))
+                                .size(18.0)
+                                .strong(),
+                        );
                         ui.label(RichText::new(&a.name).size(16.0));
                     });
-                    ui.label(format!("Category: {} | Serial: {}", a.category, a.serial.as_deref().unwrap_or("—")));
-                    ui.label(format!("Location: {} | Holder: {}", a.location.as_deref().unwrap_or("—"), a.holder.as_deref().unwrap_or("—")));
-                    ui.label(format!("In-Service: {} | Useful Life: {} years", a.in_service, a.life_years));
-                    ui.label(format!("Acquisition Cost: €{:.2}", a.cost_cents as f64 / 100.0));
+                    ui.label(format!(
+                        "Category: {} | Serial: {}",
+                        a.category,
+                        a.serial.as_deref().unwrap_or("-")
+                    ));
+                    ui.label(format!(
+                        "Location: {} | Holder: {}",
+                        a.location.as_deref().unwrap_or("-"),
+                        a.holder.as_deref().unwrap_or("-")
+                    ));
+                    ui.label(format!(
+                        "In-Service: {} | Useful Life: {} years",
+                        a.in_service, a.life_years
+                    ));
+                    ui.label(format!(
+                        "Acquisition Cost: €{:.2}",
+                        a.cost_cents as f64 / 100.0
+                    ));
                     if let Some(w) = a.warranty_until {
                         ui.label(format!("Warranty Until: {w}"));
                     }
@@ -347,7 +420,9 @@ impl AppState {
                     ui.separator();
                     ui.heading("Maintenance History");
                     if self.selected_maint.is_empty() {
-                        ui.label(RichText::new("No maintenance recorded for this asset.").italics());
+                        ui.label(
+                            RichText::new("No maintenance recorded for this asset.").italics(),
+                        );
                     } else {
                         egui::Grid::new("maint_grid").striped(true).show(ui, |ui| {
                             ui.strong("Date");
@@ -366,7 +441,9 @@ impl AppState {
                         });
                     }
                 } else {
-                    ui.label(RichText::new("Select an asset to view details and maintenance.").italics());
+                    ui.label(
+                        RichText::new("Select an asset to view details and maintenance.").italics(),
+                    );
                 }
             });
         });
@@ -393,46 +470,66 @@ impl AppState {
         ui.add_space(8.0);
 
         if let Some(ref sched) = self.selected_afa {
-            egui::ScrollArea::vertical().id_salt("afa_scroll").show(ui, |ui| {
-                egui::Grid::new("afa_grid")
-                    .striped(true)
-                    .min_col_width(120.0)
-                    .show(ui, |ui| {
-                        ui.strong("Fiscal Year");
-                        ui.strong("Opening Book Value");
-                        ui.strong("Annual AfA Amount");
-                        ui.strong("Closing Book Value");
-                        ui.strong("Depreciation Rule");
-                        ui.end_row();
-
-                        for row in &sched.rows {
-                            ui.label(format!("{}", row.year));
-                            ui.label(format!("€{:.2}", row.opening_cents as f64 / 100.0));
-                            ui.label(RichText::new(format!("€{:.2}", row.amount_cents as f64 / 100.0)).strong());
-                            ui.label(format!("€{:.2}", row.closing_cents as f64 / 100.0));
-
-                            let (tone_text, tone_color) = match row.kind {
-                                "gwg" => ("GWG Instant Write-off", Color32::from_rgb(245, 158, 11)),
-                                "half" => ("Halbjahres-AfA (50%)", Color32::from_rgb(56, 189, 248)),
-                                "full" => ("Full Year AfA", Color32::from_rgb(34, 197, 94)),
-                                "final" => ("Final Residual Year", Color32::from_rgb(168, 85, 247)),
-                                _ => (row.kind, Color32::GRAY),
-                            };
-                            render_badge(ui, tone_text, tone_color);
+            egui::ScrollArea::vertical()
+                .id_salt("afa_scroll")
+                .show(ui, |ui| {
+                    egui::Grid::new("afa_grid")
+                        .striped(true)
+                        .min_col_width(120.0)
+                        .show(ui, |ui| {
+                            ui.strong("Fiscal Year");
+                            ui.strong("Opening Book Value");
+                            ui.strong("Annual AfA Amount");
+                            ui.strong("Closing Book Value");
+                            ui.strong("Depreciation Rule");
                             ui.end_row();
-                        }
-                    });
-            });
+
+                            for row in &sched.rows {
+                                ui.label(format!("{}", row.year));
+                                ui.label(format!("€{:.2}", row.opening_cents as f64 / 100.0));
+                                ui.label(
+                                    RichText::new(format!(
+                                        "€{:.2}",
+                                        row.amount_cents as f64 / 100.0
+                                    ))
+                                    .strong(),
+                                );
+                                ui.label(format!("€{:.2}", row.closing_cents as f64 / 100.0));
+
+                                let (tone_text, tone_color) = match row.kind {
+                                    "gwg" => {
+                                        ("GWG Instant Write-off", Color32::from_rgb(245, 158, 11))
+                                    }
+                                    "half" => {
+                                        ("Halbjahres-AfA (50%)", Color32::from_rgb(56, 189, 248))
+                                    }
+                                    "full" => ("Full Year AfA", Color32::from_rgb(34, 197, 94)),
+                                    "final" => {
+                                        ("Final Residual Year", Color32::from_rgb(168, 85, 247))
+                                    }
+                                    _ => (row.kind, Color32::GRAY),
+                                };
+                                render_badge(ui, tone_text, tone_color);
+                                ui.end_row();
+                            }
+                        });
+                });
 
             if let Some(res) = sched.residual_at_disposal_cents {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     render_badge(ui, "Anlagenabgang", Color32::from_rgb(239, 68, 68));
-                    ui.label(format!("Residual book value at disposal: €{:.2}", res as f64 / 100.0));
+                    ui.label(format!(
+                        "Residual book value at disposal: €{:.2}",
+                        res as f64 / 100.0
+                    ));
                 });
             }
         } else {
-            ui.label(RichText::new("Select an active asset to calculate and view its AfA schedule.").italics());
+            ui.label(
+                RichText::new("Select an active asset to calculate and view its AfA schedule.")
+                    .italics(),
+            );
         }
     }
 
@@ -444,63 +541,69 @@ impl AppState {
         let mut assign_target = None;
         let mut unassign_target = None;
 
-        egui::ScrollArea::vertical().id_salt("lic_scroll").show(ui, |ui| {
-            egui::Grid::new("license_grid")
-                .striped(true)
-                .min_col_width(100.0)
-                .show(ui, |ui| {
-                    ui.strong("License / App");
-                    ui.strong("Vendor");
-                    ui.strong("Seats Total");
-                    ui.strong("Assigned Count");
-                    ui.strong("Utilization");
-                    ui.strong("Renewal Date");
-                    ui.strong("Assignees");
-                    ui.strong("Quick Assign");
-                    ui.end_row();
-
-                    for lic in &self.licenses {
-                        ui.label(RichText::new(&lic.name).strong());
-                        ui.label(lic.vendor.as_deref().unwrap_or("—"));
-                        ui.label(format!("{}", lic.seats));
-                        ui.label(format!("{}", lic.assigned.len()));
-
-                        let pct = if lic.seats > 0 {
-                            (lic.assigned.len() as f64 / lic.seats as f64) * 100.0
-                        } else {
-                            0.0
-                        };
-                        let col = if lic.assigned.len() as i64 > lic.seats {
-                            Color32::from_rgb(239, 68, 68) // Over-allocated
-                        } else if pct >= 90.0 {
-                            Color32::from_rgb(245, 158, 11) // Near capacity
-                        } else {
-                            Color32::from_rgb(34, 197, 94)
-                        };
-                        render_badge(ui, &format!("{pct:.0}%"), col);
-
-                        ui.label(lic.renews_on.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "—".into()));
-
-                        ui.horizontal_wrapped(|ui| {
-                            for user in &lic.assigned {
-                                ui.label(user);
-                                if ui.small_button("×").clicked() {
-                                    unassign_target = Some((lic.name.clone(), user.clone()));
-                                }
-                            }
-                        });
-
-                        ui.horizontal(|ui| {
-                            ui.text_edit_singleline(&mut self.assignee_input);
-                            if ui.small_button("+ Assign").clicked() {
-                                assign_target = Some(lic.name.clone());
-                            }
-                        });
-
+        egui::ScrollArea::vertical()
+            .id_salt("lic_scroll")
+            .show(ui, |ui| {
+                egui::Grid::new("license_grid")
+                    .striped(true)
+                    .min_col_width(100.0)
+                    .show(ui, |ui| {
+                        ui.strong("License / App");
+                        ui.strong("Vendor");
+                        ui.strong("Seats Total");
+                        ui.strong("Assigned Count");
+                        ui.strong("Utilization");
+                        ui.strong("Renewal Date");
+                        ui.strong("Assignees");
+                        ui.strong("Quick Assign");
                         ui.end_row();
-                    }
-                });
-        });
+
+                        for lic in &self.licenses {
+                            ui.label(RichText::new(&lic.name).strong());
+                            ui.label(lic.vendor.as_deref().unwrap_or("-"));
+                            ui.label(format!("{}", lic.seats));
+                            ui.label(format!("{}", lic.assigned.len()));
+
+                            let pct = if lic.seats > 0 {
+                                (lic.assigned.len() as f64 / lic.seats as f64) * 100.0
+                            } else {
+                                0.0
+                            };
+                            let col = if lic.assigned.len() as i64 > lic.seats {
+                                Color32::from_rgb(239, 68, 68) // Over-allocated
+                            } else if pct >= 90.0 {
+                                Color32::from_rgb(245, 158, 11) // Near capacity
+                            } else {
+                                Color32::from_rgb(34, 197, 94)
+                            };
+                            render_badge(ui, &format!("{pct:.0}%"), col);
+
+                            ui.label(
+                                lic.renews_on
+                                    .map(|d| d.format("%Y-%m-%d").to_string())
+                                    .unwrap_or_else(|| "-".into()),
+                            );
+
+                            ui.horizontal_wrapped(|ui| {
+                                for user in &lic.assigned {
+                                    ui.label(user);
+                                    if ui.small_button("×").clicked() {
+                                        unassign_target = Some((lic.name.clone(), user.clone()));
+                                    }
+                                }
+                            });
+
+                            ui.horizontal(|ui| {
+                                ui.text_edit_singleline(&mut self.assignee_input);
+                                if ui.small_button("+ Assign").clicked() {
+                                    assign_target = Some(lic.name.clone());
+                                }
+                            });
+
+                            ui.end_row();
+                        }
+                    });
+            });
 
         if let Some(lic) = assign_target {
             self.assign_license(&lic);
