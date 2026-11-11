@@ -45,3 +45,21 @@ Fixed assets with Austrian AfA, software licences and expiry dates for a small b
 1. egui app: register table, asset detail with schedule chart, expiry board, label print.
 2. Steuerberater review; degressive AfA as an option.
 3. Real inventory import from the fleet (Goliath, robots, plugs).
+
+## UI/UX Architecture & Menu Bar Standard
+
+In accordance with [`CRAFT_MENU_BAR_STANDARD.md`](../../mcp-central-docs/standards/rust-artcraft/CRAFT_MENU_BAR_STANDARD.md):
+- **Pattern 2 (Viewport-Centric Craft Workstation):** Persistent asset register table and depreciation schedule canvas with dockable detail inspector. Top quick button row acts as accelerators into the `View` menu. To add a new asset view or depreciation schedule:
+  1. Register a visibility toggle in the `View` or `Window` menu.
+  2. Add an entry in the sidebar Category / Filter toolbox.
+  3. Wire the action directly into the universal `Command::dispatch` bus.
+- **Top Menu Bar Hierarchy:**
+  - `File`: New Inventory (`Ctrl+N`), Open Register (`Ctrl+O`), Open Recent ▸, Save (`Ctrl+S`), Export AfA / CSV / SVG Labels (`Ctrl+E`), Close Register (`Ctrl+W`), Quit (`Ctrl+Q`).
+  - `Edit`: Undo (`Ctrl+Z`), Redo (`Ctrl+Y`), Cut, Copy, Paste, Select All, Preferences (`Ctrl+,`).
+  - `View`: Asset Register Table, Depreciation Schedule Chart, Expiry & Warranty Board, QR Label Grid, Theme (`Dark`/`Light`).
+  - `Insert`: Add Asset, Add Software Licence, Add Maintenance Log, Add Warranty / Expiry Deadline.
+  - `Modify`: Edit Asset Details, Reassign Licence Seat, Record Disposal / Salvage, Adjust AfA Parameters.
+  - `Commands`: Calculate AfA Run, Emit BuchCraft Drafts, Run Licence Audit, Generate QR Label Sheets.
+  - `Window`: Reset Layout, Asset Viewport, Schedule Inspector, Bus Signals Dock.
+  - `Help` (Mandatory 5-Dialog Suite): `Command Palette...` (`Ctrl+K`), `Keyboard Shortcuts...` (`F1`), `Project Files & Docs...`, `Licenses & Notices...`, `About AssetCraft`.
+- **Behavioral Mechanics:** Smooth `switch_on_hover` between top-level menus, zero-unsafe immediate-mode rendering, and headless `--smoke` parity.
