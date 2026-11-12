@@ -1,0 +1,129 @@
+{
+  "manifest_version": "0.2",
+  "name": "assetcraft",
+  "display_name": "AssetCraft",
+  "version": "__VERSION__",
+  "description": "assetcraft L2: one binary for the CLI (every verb takes --json) and the MCP stdio server.",
+  "author": {
+    "name": "Sandra Schipal",
+    "url": "https://github.com/sandraschi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandraschi/assetcraft"
+  },
+  "license": "MIT OR Apache-2.0",
+  "server": {
+    "type": "binary",
+    "entry_point": "assetcraft.exe",
+    "mcp_config": {
+      "command": "${__dirname}/assetcraft.exe",
+      "args": [
+        "mcp"
+      ]
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "win32"
+    ]
+  },
+  "tools": [
+    {
+      "name": "asset_status",
+      "description": "Counts, cost of active assets, licence seats, open deadlines, GWG limit."
+    },
+    {
+      "name": "asset_add",
+      "description": "Register an asset. cost is the AfA base (net if VAT is deductible). GWG is automatic at or below the limit unless gwg=false. Life defaults from the category; cars need at least 8 years."
+    },
+    {
+      "name": "asset_list",
+      "description": "List assets with book value at the start of this year."
+    },
+    {
+      "name": "asset_show",
+      "description": "One asset with AfA schedule, postings to buchcraft, maintenance and deadlines."
+    },
+    {
+      "name": "asset_update",
+      "description": "Change fields; null clears serial/location/holder/warranty_until. cost/in_service/life_years/gwg are frozen once AfA was posted."
+    },
+    {
+      "name": "asset_dispose",
+      "description": "Retire an asset (sold, scrapped). Returns disposal-year AfA, book value and gain/loss. The asset becomes read-only."
+    },
+    {
+      "name": "asset_afa_schedule",
+      "description": "Straight-line AfA plan in cents with Halbjahres-AfA and GWG."
+    },
+    {
+      "name": "asset_afa_year",
+      "description": "AfA for all assets in a year with totals per account. emit=true sends asset.depreciation_due to buchcraft (drafts there, approved by a human); each asset/year is sent once."
+    },
+    {
+      "name": "asset_maintenance_add",
+      "description": "Log a repair, service or inspection with cost."
+    },
+    {
+      "name": "asset_category_list",
+      "description": "Categories with default life, minimum life and EKR asset account."
+    },
+    {
+      "name": "asset_category_set",
+      "description": "Create or change a category (life 1-50, minimum life, EKR account)."
+    },
+    {
+      "name": "asset_gwg_limit",
+      "description": "Show or set the GWG limit (default 1.000,00 since 2023)."
+    },
+    {
+      "name": "asset_license_add",
+      "description": "Register a software licence. Never pass the key itself: key_location says where it is stored."
+    },
+    {
+      "name": "asset_license_list",
+      "description": "Licences with assigned seats."
+    },
+    {
+      "name": "asset_license_assign",
+      "description": "Give a person a seat. Refused when full unless force=true."
+    },
+    {
+      "name": "asset_license_unassign",
+      "description": "Free a seat."
+    },
+    {
+      "name": "asset_license_seats",
+      "description": "Change the number of seats."
+    },
+    {
+      "name": "asset_license_audit",
+      "description": "Over-allocated and unused seats, renewals due within 60 days, cost per used seat."
+    },
+    {
+      "name": "asset_deadline_add",
+      "description": "Track a certificate, domain, insurance, inspection or contract date, optionally tied to an asset."
+    },
+    {
+      "name": "asset_deadline_done",
+      "description": "Mark a deadline handled."
+    },
+    {
+      "name": "asset_expiries",
+      "description": "Warranties, licence renewals and deadlines due within N days (default 60), overdue first."
+    },
+    {
+      "name": "asset_label",
+      "description": "Write a printable SVG label with a QR code (ASSET:<tag>) for an asset."
+    },
+    {
+      "name": "asset_import_csv",
+      "description": "Import assets from CSV tag;name;category;in_service;cost[;serial;location;holder]. All-or-nothing; dry_run validates only."
+    },
+    {
+      "name": "asset_demo_seed",
+      "description": "Fill an EMPTY register with a labelled demo inventory, licences and deadlines."
+    }
+  ]
+}
