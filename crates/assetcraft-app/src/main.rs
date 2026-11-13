@@ -2,12 +2,19 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use assetcraft_core::afa::{self, Basis, Schedule};
+use assetcraft_core::demo_seed;
 use assetcraft_core::label;
-use assetcraft_store::{Asset, Category, License, Maintenance, Registry};
+use assetcraft_core::{afa_year, Ctx};
+use assetcraft_store::{
+    Asset, Category, Deadline, License, Maintenance, NewAsset, NewLicense, Registry, DEADLINE_KINDS,
+};
 use chrono::Local;
 use clap::Parser;
+use craft_biz::confine::Confinement;
+use craft_biz::Money;
 use craft_biz_ui::bookend::{self, Bar, Spec};
 use craft_biz_ui::menu::Item;
+use craft_biz_ui::theme::{self, tokens};
 use eframe::egui::{self, Color32, RichText};
 use std::path::PathBuf;
 
@@ -24,6 +31,18 @@ struct Cli {
     /// Smoke test: open DB, verify schemas, and exit immediately.
     #[arg(long)]
     smoke: bool,
+}
+
+fn resolve_bus() -> Option<craft_biz::bus::Bus> {
+    if let Ok(dir) = std::env::var("CRAFT_BUS_DIR") {
+        return Some(craft_biz::bus::Bus::new(std::path::PathBuf::from(dir)));
+    }
+    if let Ok(local) = std::env::var("LOCALAPPDATA") {
+        return Some(craft_biz::bus::Bus::new(
+            std::path::PathBuf::from(local).join("craft-biz-bus"),
+        ));
+    }
+    None
 }
 
 fn default_db() -> PathBuf {
@@ -44,6 +63,7 @@ enum ActiveTab {
     AfaDepreciation,
     Licenses,
     Labels,
+    Expiries,
 }
 
 fn render_badge(ui: &mut egui::Ui, text: &str, color: Color32) {
@@ -73,6 +93,22 @@ struct AppState {
     bar: Bar,
     dark: bool,
     zoom: f32,
+    new_tag: String,
+    new_name: String,
+    new_category: String,
+    new_cost: String,
+    deadlines: Vec<Deadline>,
+    lic_name: String,
+    lic_vendor: String,
+    lic_seats: String,
+    lic_where: String,
+    dl_name: String,
+    dl_kind: String,
+    dl_due: String,
+    dl_tag: String,
+    maint_kind: String,
+    maint_cost: String,
+    afa_year: String,
 }
 
 impl AppState {
@@ -94,6 +130,22 @@ impl AppState {
             bar: Bar::new(),
             dark: true,
             zoom: 1.0,
+            new_tag: String::new(),
+            new_name: String::new(),
+            new_category: "it".into(),
+            new_cost: String::new(),
+            deadlines: Vec::new(),
+            lic_name: String::new(),
+            lic_vendor: String::new(),
+            lic_seats: "1".into(),
+            lic_where: String::new(),
+            dl_name: String::new(),
+            dl_kind: "certificate".into(),
+            dl_due: String::new(),
+            dl_tag: String::new(),
+            maint_kind: "service".into(),
+            maint_cost: String::new(),
+            afa_year: Local::now().format("%Y").to_string(),
         };
         app.reload_data();
         app
@@ -128,6 +180,9 @@ impl AppState {
 
         if let Ok(lics) = self.reg.licenses() {
             self.licenses = lics;
+        }
+        if let Ok(rows) = self.reg.deadlines(false) {
+            self.deadlines = rows;
         }
     }
 
@@ -168,6 +223,56 @@ impl AppState {
         }
     }
 
+    fn register_asset(&mut self) {
+        let tag = self.new_tag.trim().to_string();
+        let name = self.new_name.trim().to_string();
+        let category = self.new_category.trim().to_string();
+        if tag.is_empty() || name.is_empty() || category.is_empty() {
+            self.status_msg = Some("Tag, name, and category are required.".into());
+            return;
+        }
+        let cents = match Money::parse_de(&self.new_cost) {
+            Ok(m) if m.cents() > 0 => m.cents(),
+            _ => {
+                self.status_msg = Some("Cost must be a positive amount such as 1.499,00.".into());
+                return;
+            }
+        };
+        let today = Local::now().date_naive();
+        match self.reg.add_asset(&NewAsset {
+            tag,
+            name,
+            category,
+            in_service: today,
+            purchase_date: Some(today),
+            cost_cents: cents,
+            notes: "Registered in the window.".into(),
+            ..Default::default()
+        }) {
+            Ok(a) => {
+                self.status_msg = Some(format!("Registered {}.", a.tag));
+                self.new_tag.clear();
+                self.new_name.clear();
+                self.new_cost.clear();
+                self.selected_asset = None;
+                self.reload_data();
+            }
+            Err(e) => self.status_msg = Some(e.to_string()),
+        }
+    }
+
+    fn load_demo(&mut self) {
+        match demo_seed(&self.reg) {
+            Ok(_) => {
+                self.status_msg =
+                    Some("Loaded the labelled DEMO inventory. Names say DEMO.".into());
+                self.selected_asset = None;
+                self.reload_data();
+            }
+            Err(e) => self.status_msg = Some(e),
+        }
+    }
+
     fn unassign_license(&mut self, lic_name: &str, assignee: &str) {
         match self.reg.unassign(lic_name, assignee) {
             Ok(_) => {
@@ -192,7 +297,10 @@ impl AppState {
             docs: &docs,
             dark: self.dark,
             zoom: self.zoom,
-            file: vec![Item::action("Refresh", "app.refresh")],
+            file: vec![
+                Item::action("Load demo inventory", "app.demo"),
+                Item::action("Refresh", "app.refresh"),
+            ],
             view: vec![
                 Item::action("Assets", "view.assets")
                     .checked(self.current_tab == ActiveTab::Assets),
@@ -202,6 +310,8 @@ impl AppState {
                     .checked(self.current_tab == ActiveTab::Licenses),
                 Item::action("Labels", "view.labels")
                     .checked(self.current_tab == ActiveTab::Labels),
+                Item::action("Expiries", "view.expiries")
+                    .checked(self.current_tab == ActiveTab::Expiries),
             ],
             middle: Vec::new(),
         };
@@ -214,10 +324,12 @@ impl AppState {
         }
         match change.action.as_deref() {
             Some("app.refresh") => self.reload_data(),
+            Some("app.demo") => self.load_demo(),
             Some("view.assets") => self.current_tab = ActiveTab::Assets,
             Some("view.afa") => self.current_tab = ActiveTab::AfaDepreciation,
             Some("view.licenses") => self.current_tab = ActiveTab::Licenses,
             Some("view.labels") => self.current_tab = ActiveTab::Labels,
+            Some("view.expiries") => self.current_tab = ActiveTab::Expiries,
             _ => {}
         }
     }
@@ -225,6 +337,7 @@ impl AppState {
 
 impl eframe::App for AppState {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        theme::apply(ui.ctx(), self.dark);
         self.paint_menu(ui);
 
         // Header Bar
@@ -240,6 +353,15 @@ impl eframe::App for AppState {
             );
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let theme_label = if self.dark {
+                    "Light theme"
+                } else {
+                    "Dark theme"
+                };
+                if ui.button(theme_label).clicked() {
+                    self.dark = !self.dark;
+                    theme::apply(ui.ctx(), self.dark);
+                }
                 if ui.button("⟳ Refresh").clicked() {
                     self.reload_data();
                 }
@@ -312,6 +434,12 @@ impl eframe::App for AppState {
                 self.current_tab = ActiveTab::Licenses;
             }
             if ui
+                .selectable_label(self.current_tab == ActiveTab::Expiries, "Expiries")
+                .clicked()
+            {
+                self.current_tab = ActiveTab::Expiries;
+            }
+            if ui
                 .selectable_label(
                     self.current_tab == ActiveTab::Labels,
                     "🏷 QR Labels & Barcodes",
@@ -329,6 +457,7 @@ impl eframe::App for AppState {
             ActiveTab::AfaDepreciation => self.render_afa(ui),
             ActiveTab::Licenses => self.render_licenses(ui),
             ActiveTab::Labels => self.render_labels(ui),
+            ActiveTab::Expiries => self.render_expiries(ui),
         }
     }
 }
@@ -382,11 +511,29 @@ impl AppState {
         ui.add_space(8.0);
 
         let mut next_selected = None;
+        let mut maint_tag = None;
 
         ui.columns(2, |cols| {
             // Left Column: Asset Registry List
             cols[0].group(|ui| {
                 ui.heading("Hardware & Asset Inventory");
+                ui.horizontal(|ui| {
+                    ui.label("Tag");
+                    ui.add(egui::TextEdit::singleline(&mut self.new_tag).desired_width(70.0));
+                    ui.label("Name");
+                    ui.add(egui::TextEdit::singleline(&mut self.new_name).desired_width(140.0));
+                    ui.label("Category");
+                    ui.add(egui::TextEdit::singleline(&mut self.new_category).desired_width(70.0));
+                    ui.label("Cost");
+                    ui.add(egui::TextEdit::singleline(&mut self.new_cost).desired_width(80.0));
+                    if ui.button("Register").clicked() {
+                        self.register_asset();
+                    }
+                    if ui.button("Load demo").clicked() {
+                        self.load_demo();
+                    }
+                });
+                ui.label(RichText::new("Categories include it, car, office, furniture, machine, other. Cost is Austrian: 1.499,00. Demo names say DEMO.").color(tokens(self.dark).text_weak));
                 ui.add_space(4.0);
 
                 egui::ScrollArea::vertical()
@@ -469,6 +616,15 @@ impl AppState {
 
                     ui.separator();
                     ui.heading("Maintenance History");
+                    ui.horizontal(|ui| {
+                        ui.label("Kind");
+                        ui.add(egui::TextEdit::singleline(&mut self.maint_kind).desired_width(80.0));
+                        ui.label("Cost");
+                        ui.add(egui::TextEdit::singleline(&mut self.maint_cost).desired_width(70.0));
+                        if ui.button("Add maintenance").clicked() {
+                            maint_tag = Some(a.tag.clone());
+                        }
+                    });
                     if self.selected_maint.is_empty() {
                         ui.label(
                             RichText::new("No maintenance recorded for this asset.").italics(),
@@ -501,6 +657,189 @@ impl AppState {
         if let Some(asset) = next_selected {
             self.select_asset(asset);
         }
+        if let Some(tag) = maint_tag {
+            self.add_maintenance(&tag);
+        }
+    }
+
+    fn add_maintenance(&mut self, tag: &str) {
+        let cents = match Money::parse_de(&self.maint_cost) {
+            Ok(m) if m.cents() >= 0 => m.cents(),
+            _ => {
+                self.status_msg = Some("Maintenance cost is an amount such as 38,40.".into());
+                return;
+            }
+        };
+        let today = Local::now().date_naive();
+        let kind = self.maint_kind.clone();
+        match self.reg.add_maintenance(tag, today, &kind, cents, "") {
+            Ok(_) => {
+                self.status_msg = Some(format!("Maintenance recorded for {tag}."));
+                self.maint_cost.clear();
+                if let Ok(a) = self.reg.asset(tag) {
+                    self.select_asset(a);
+                }
+            }
+            Err(e) => self.status_msg = Some(e.to_string()),
+        }
+    }
+
+    fn add_licence(&mut self) {
+        let name = self.lic_name.trim().to_string();
+        if name.is_empty() {
+            self.status_msg = Some("A licence needs a name.".into());
+            return;
+        }
+        let seats: i64 = match self.lic_seats.trim().parse() {
+            Ok(n) if n > 0 => n,
+            _ => {
+                self.status_msg = Some("Seats must be a positive whole number.".into());
+                return;
+            }
+        };
+        let vendor = self.lic_vendor.trim().to_string();
+        let where_key = self.lic_where.trim().to_string();
+        match self.reg.add_license(&NewLicense {
+            name,
+            vendor: if vendor.is_empty() {
+                None
+            } else {
+                Some(vendor)
+            },
+            seats,
+            key_location: if where_key.is_empty() {
+                None
+            } else {
+                Some(where_key)
+            },
+            ..Default::default()
+        }) {
+            Ok(lic) => {
+                self.status_msg = Some(format!("Licence {} added.", lic.name));
+                self.lic_name.clear();
+                self.reload_data();
+            }
+            Err(e) => self.status_msg = Some(e.to_string()),
+        }
+    }
+
+    fn add_deadline(&mut self) {
+        let name = self.dl_name.trim().to_string();
+        if name.is_empty() {
+            self.status_msg = Some("An expiry needs a name.".into());
+            return;
+        }
+        let due = match chrono::NaiveDate::parse_from_str(self.dl_due.trim(), "%Y-%m-%d") {
+            Ok(d) => d,
+            Err(_) => {
+                self.status_msg = Some("Due date is YYYY-MM-DD.".into());
+                return;
+            }
+        };
+        let tag = self.dl_tag.trim().to_string();
+        let kind = self.dl_kind.clone();
+        match self.reg.add_deadline(
+            &name,
+            &kind,
+            due,
+            if tag.is_empty() {
+                None
+            } else {
+                Some(tag.as_str())
+            },
+            "",
+        ) {
+            Ok(_) => {
+                self.status_msg = Some(format!("Expiry {name} saved."));
+                self.dl_name.clear();
+                self.reload_data();
+            }
+            Err(e) => self.status_msg = Some(e.to_string()),
+        }
+    }
+
+    fn post_afa(&mut self) {
+        let year: i32 = match self.afa_year.trim().parse() {
+            Ok(y) => y,
+            Err(_) => {
+                self.status_msg = Some("AfA year must be a number.".into());
+                return;
+            }
+        };
+        let Some(bus) = resolve_bus() else {
+            self.status_msg =
+                Some("No local bus directory. Set LOCALAPPDATA or CRAFT_BUS_DIR.".into());
+            return;
+        };
+        let hold = match Registry::open_in_memory() {
+            Ok(r) => r,
+            Err(e) => {
+                self.status_msg = Some(e.to_string());
+                return;
+            }
+        };
+        let reg = std::mem::replace(&mut self.reg, hold);
+        let mut ctx = Ctx {
+            reg,
+            confinement: Confinement(None),
+            bus,
+        };
+        let today = Local::now().date_naive();
+        let result = afa_year(&mut ctx, year, true, today);
+        self.reg = ctx.reg;
+        self.selected_asset = None;
+        self.reload_data();
+        match result {
+            Ok(v) => {
+                let emitted = v.get("emitted").and_then(|x| x.as_u64()).unwrap_or(0);
+                let total = v.get("total").and_then(|x| x.as_str()).unwrap_or("");
+                self.status_msg = Some(format!(
+                    "AfA {year}: {total}. Sent {emitted} drafts to BuchCraft. A human still approves them."
+                ));
+            }
+            Err(e) => self.status_msg = Some(e),
+        }
+    }
+
+    fn render_expiries(&mut self, ui: &mut egui::Ui) {
+        ui.heading("Warranties, certificates, domains, insurance, and inspections");
+        ui.horizontal(|ui| {
+            ui.label("Name");
+            ui.add(egui::TextEdit::singleline(&mut self.dl_name).desired_width(180.0));
+            ui.label("Kind");
+            egui::ComboBox::from_id_salt("deadline_kind")
+                .selected_text(&self.dl_kind)
+                .show_ui(ui, |ui| {
+                    for kind in DEADLINE_KINDS {
+                        ui.selectable_value(&mut self.dl_kind, (*kind).to_string(), *kind);
+                    }
+                });
+            ui.label("Due");
+            ui.add(egui::TextEdit::singleline(&mut self.dl_due).desired_width(90.0));
+            ui.label("Asset tag");
+            ui.add(egui::TextEdit::singleline(&mut self.dl_tag).desired_width(70.0));
+            if ui.button("Add expiry").clicked() {
+                self.add_deadline();
+            }
+        });
+        ui.label("Kind is certificate, domain, insurance, inspection, contract, or other. Due is YYYY-MM-DD. Tag is optional.");
+        if self.deadlines.is_empty() {
+            ui.label("No open expiries. Load the demo inventory, or add one.");
+        }
+        egui::Grid::new("expiry_grid").striped(true).show(ui, |ui| {
+            ui.strong("Due");
+            ui.strong("Kind");
+            ui.strong("Name");
+            ui.strong("Asset");
+            ui.end_row();
+            for d in &self.deadlines {
+                ui.label(d.due_on.to_string());
+                ui.label(&d.kind);
+                ui.label(&d.name);
+                ui.label(d.tag.as_deref().unwrap_or("-"));
+                ui.end_row();
+            }
+        });
     }
 
     fn render_afa(&mut self, ui: &mut egui::Ui) {
@@ -518,6 +857,14 @@ impl AppState {
         );
 
         ui.add_space(8.0);
+        ui.horizontal(|ui| {
+            ui.label("Year");
+            ui.add(egui::TextEdit::singleline(&mut self.afa_year).desired_width(60.0));
+            if ui.button("Post this year's AfA to BuchCraft").clicked() {
+                self.post_afa();
+            }
+        });
+        ui.label("Posts asset.depreciation_due drafts. BuchCraft still has to approve them. A year is sent once.");
 
         if let Some(ref sched) = self.selected_afa {
             egui::ScrollArea::vertical()
@@ -585,7 +932,20 @@ impl AppState {
 
     fn render_licenses(&mut self, ui: &mut egui::Ui) {
         ui.heading("Software Licenses, Subscriptions & Seat Allocation");
-
+        ui.horizontal(|ui| {
+            ui.label("Name");
+            ui.add(egui::TextEdit::singleline(&mut self.lic_name).desired_width(140.0));
+            ui.label("Vendor");
+            ui.add(egui::TextEdit::singleline(&mut self.lic_vendor).desired_width(120.0));
+            ui.label("Seats");
+            ui.add(egui::TextEdit::singleline(&mut self.lic_seats).desired_width(40.0));
+            ui.label("Key lives in");
+            ui.add(egui::TextEdit::singleline(&mut self.lic_where).desired_width(140.0));
+            if ui.button("Add licence").clicked() {
+                self.add_licence();
+            }
+        });
+        ui.label("Store where the key lives, such as Bitwarden: Office. Do not paste the key.");
         ui.add_space(8.0);
 
         let mut assign_target = None;
