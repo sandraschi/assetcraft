@@ -172,6 +172,8 @@ enum Cmd {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Record an equipment reminder from each hirecraft candidate.hired event.
+    DrainInbox,
     /// Fill an empty register with the labelled demo inventory.
     DemoSeed,
     /// Print the MCP tool catalog (JSON, or markdown for docs/TOOLS.md).
@@ -454,6 +456,7 @@ fn to_tool(cmd: Cmd) -> Result<(&'static str, Value), String> {
             "asset_import_csv",
             json!({ "path": path, "dry_run": dry_run }),
         ),
+        Cmd::DrainInbox => ("asset_drain_inbox", json!({})),
         Cmd::DemoSeed => ("asset_demo_seed", json!({})),
         Cmd::Tools { .. } | Cmd::Mcp => return Err("not a tool verb".into()),
     })
@@ -787,6 +790,7 @@ mod tests {
             },
             Cmd::Expiries { days: 30 },
             Cmd::Gwg { set: None },
+            Cmd::DrainInbox,
             Cmd::DemoSeed,
         ];
         let names: Vec<String> = tools()

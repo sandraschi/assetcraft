@@ -24,7 +24,7 @@ Fixed assets with Austrian AfA, software licences and expiry dates for a small b
 - `afa --emit` -> buchcraft drafts -> approved -> booked (verified end to end); posted AfA basis frozen by trigger.
 - Licences with seats, assignment guard, audit; keys never stored.
 - Expiries across warranties, renewals and deadlines; QR SVG labels; all-or-nothing CSV import.
-- 24 MCP tools ([TOOLS.md](TOOLS.md), generated and test-checked).
+- 25 MCP tools ([TOOLS.md](TOOLS.md), generated and test-checked). `asset_drain_inbox` records an equipment reminder from a hire. It does not invent an asset or a cost.
 
 ## Boundaries
 

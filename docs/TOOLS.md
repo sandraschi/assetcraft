@@ -28,4 +28,5 @@ is out of date. Every tool is also a CLI verb (`assetcraft --help`). Dotted name
 | `asset_expiries` | Warranties, licence renewals and deadlines due within N days (default 60), overdue first. | - | `as_of`, `within_days` |
 | `asset_label` | Write a printable SVG label with a QR code (ASSET:<tag>) for an asset. | `tag`, `path` | - |
 | `asset_import_csv` | Import assets from CSV tag;name;category;in_service;cost[;serial;location;holder]. All-or-nothing; dry_run validates only. | `path` | `dry_run` |
+| `asset_drain_inbox` | Record one equipment reminder per hirecraft candidate.hired event. No asset and no cost are invented. A repeated candidate is skipped. A payload without candidate_id or name is rejected. | - | - |
 | `asset_demo_seed` | Fill an EMPTY register with a labelled demo inventory, licences and deadlines. | - | - |

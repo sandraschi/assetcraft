@@ -6,6 +6,8 @@ use assetcraft_core::label;
 use assetcraft_store::{Asset, Category, License, Maintenance, Registry};
 use chrono::Local;
 use clap::Parser;
+use craft_biz_ui::bookend::{self, Bar, Spec};
+use craft_biz_ui::menu::Item;
 use eframe::egui::{self, Color32, RichText};
 use std::path::PathBuf;
 
@@ -68,6 +70,9 @@ struct AppState {
 
     // License assignment input
     assignee_input: String,
+    bar: Bar,
+    dark: bool,
+    zoom: f32,
 }
 
 impl AppState {
@@ -86,6 +91,9 @@ impl AppState {
             filter_category: None,
             include_disposed: false,
             assignee_input: String::new(),
+            bar: Bar::new(),
+            dark: true,
+            zoom: 1.0,
         };
         app.reload_data();
         app
@@ -173,9 +181,51 @@ impl AppState {
     }
 }
 
+impl AppState {
+    fn paint_menu(&mut self, ui: &mut egui::Ui) {
+        let docs = bookend::repo_docs(env!("CARGO_MANIFEST_DIR"));
+        let spec = Spec {
+            name: "AssetCraft",
+            version: env!("CARGO_PKG_VERSION"),
+            description: "Assets, depreciation, and licenses.",
+            repository: "https://github.com/sandraschi/assetcraft",
+            docs: &docs,
+            dark: self.dark,
+            zoom: self.zoom,
+            file: vec![Item::action("Refresh", "app.refresh")],
+            view: vec![
+                Item::action("Assets", "view.assets")
+                    .checked(self.current_tab == ActiveTab::Assets),
+                Item::action("Depreciation", "view.afa")
+                    .checked(self.current_tab == ActiveTab::AfaDepreciation),
+                Item::action("Licenses", "view.licenses")
+                    .checked(self.current_tab == ActiveTab::Licenses),
+                Item::action("Labels", "view.labels")
+                    .checked(self.current_tab == ActiveTab::Labels),
+            ],
+            middle: Vec::new(),
+        };
+        let change = self.bar.show(ui, &spec);
+        if let Some(dark) = change.dark {
+            self.dark = dark;
+        }
+        if let Some(zoom) = change.zoom {
+            self.zoom = zoom;
+        }
+        match change.action.as_deref() {
+            Some("app.refresh") => self.reload_data(),
+            Some("view.assets") => self.current_tab = ActiveTab::Assets,
+            Some("view.afa") => self.current_tab = ActiveTab::AfaDepreciation,
+            Some("view.licenses") => self.current_tab = ActiveTab::Licenses,
+            Some("view.labels") => self.current_tab = ActiveTab::Labels,
+            _ => {}
+        }
+    }
+}
+
 impl eframe::App for AppState {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        ui.visuals_mut().dark_mode = true;
+        self.paint_menu(ui);
 
         // Header Bar
         ui.horizontal(|ui| {
@@ -652,6 +702,10 @@ fn main() -> eframe::Result<()> {
         match Registry::open(&db_path) {
             Ok(reg) => {
                 let _ = reg.assets(None, true, None);
+                if let Err(e) = bookend::smoke("AssetCraft", env!("CARGO_PKG_VERSION"), "assets") {
+                    eprintln!("smoke: menu: {e}");
+                    std::process::exit(1);
+                }
                 println!("smoke: ok (assetcraft-app)");
                 return Ok(());
             }

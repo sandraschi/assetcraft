@@ -116,6 +116,7 @@ pub enum Command {
         path: String,
         dry_run: bool,
     },
+    DrainInbox,
     DemoSeed,
 }
 
@@ -321,6 +322,7 @@ impl Command {
                 path: s(a, "path")?.into(),
                 dry_run: flag(a, "dry_run"),
             },
+            "asset_drain_inbox" => Command::DrainInbox,
             "asset_demo_seed" => Command::DemoSeed,
             other => return Err(format!("unknown tool {other}")),
         })
@@ -514,6 +516,7 @@ pub fn dispatch(ctx: &mut Ctx, cmd: Command) -> Result<Value, String> {
             )
         }
         Command::ImportCsv { path, dry_run } => import_csv(ctx, &path, dry_run),
+        Command::DrainInbox => drain_inbox(ctx),
         Command::DemoSeed => demo_seed(&ctx.reg),
     }
 }
@@ -931,6 +934,76 @@ pub fn demo_seed(r: &Registry) -> Result<Value, String> {
     Ok(json!({ "demo": true, "stats": to_json(&r.stats().map_err(e)?)? }))
 }
 
+/// Records one open equipment reminder from each `candidate.hired` event.
+///
+/// No asset is created. A purchase price is not in the event, and inventing
+/// one would enter the depreciation book. A second event for the same
+/// candidate is acknowledged and does not add another reminder.
+pub fn drain_inbox(ctx: &mut Ctx) -> Result<Value, String> {
+    let events = ctx.bus.pending(APP).map_err(|err| err.to_string())?;
+    let processed = events.len();
+    let mut created = Vec::new();
+    let mut rejected = 0usize;
+    for ev in events {
+        let outcome = if ev.kind == "candidate.hired" {
+            apply_hired(ctx, &ev.payload)
+        } else {
+            Ok(None)
+        };
+        match outcome {
+            Ok(Some(id)) => {
+                created.push(id);
+                ctx.bus.ack(APP, &ev.id).map_err(|err| err.to_string())?;
+            }
+            Ok(None) => ctx.bus.ack(APP, &ev.id).map_err(|err| err.to_string())?,
+            Err(err) => {
+                rejected += 1;
+                ctx.bus
+                    .reject(APP, &ev.id, &err)
+                    .map_err(|bus_err| bus_err.to_string())?;
+            }
+        }
+    }
+    Ok(json!({
+        "processed": processed,
+        "created": created,
+        "rejected": rejected,
+    }))
+}
+
+fn apply_hired(ctx: &mut Ctx, payload: &Value) -> Result<Option<i64>, String> {
+    let candidate_id = required_text(payload, "candidate_id")?;
+    let name = required_text(payload, "name")?;
+    let marker = format!("hire:{candidate_id}");
+    let existing = ctx.reg.deadlines(true).map_err(e)?;
+    if existing
+        .iter()
+        .any(|deadline| deadline.notes.contains(&marker))
+    {
+        return Ok(None);
+    }
+    let deadline = ctx
+        .reg
+        .add_deadline(
+            &format!("Equipment for {name}"),
+            "other",
+            today(),
+            None,
+            &format!("{marker}; no asset chosen; cost unknown"),
+        )
+        .map_err(e)?;
+    Ok(Some(deadline.id))
+}
+
+fn required_text<'a>(payload: &'a Value, key: &str) -> Result<&'a str, String> {
+    payload
+        .get(key)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| format!("{key} is required"))
+}
+
 /// MCP tool catalog.
 pub fn tools() -> Vec<Value> {
     let tag = json!({ "type": "string", "description": "Asset tag, e.g. GOL-001" });
@@ -961,6 +1034,7 @@ pub fn tools() -> Vec<Value> {
         tool("asset_expiries", "Warranties, licence renewals and deadlines due within N days (default 60), overdue first.", json!({ "within_days": {"type":"integer"}, "as_of": date }), &[]),
         tool("asset_label", "Write a printable SVG label with a QR code (ASSET:<tag>) for an asset.", json!({ "tag": tag, "path": {"type":"string"} }), &["tag", "path"]),
         tool("asset_import_csv", "Import assets from CSV tag;name;category;in_service;cost[;serial;location;holder]. All-or-nothing; dry_run validates only.", json!({ "path": {"type":"string"}, "dry_run": {"type":"boolean"} }), &["path"]),
+        tool("asset_drain_inbox", "Record one equipment reminder per hirecraft candidate.hired event. No asset and no cost are invented. A repeated candidate is skipped. A payload without candidate_id or name is rejected.", json!({}), &[]),
         tool("asset_demo_seed", "Fill an EMPTY register with a labelled demo inventory, licences and deadlines.", json!({}), &[]),
     ]
 }

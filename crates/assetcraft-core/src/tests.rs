@@ -21,7 +21,7 @@ fn d(y: i32, m: u32, day: u32) -> NaiveDate {
 
 #[test]
 fn catalog_tools_are_routable() {
-    assert_eq!(tools().len(), 24);
+    assert_eq!(tools().len(), 25);
     for t in tools() {
         let name = t["name"].as_str().unwrap();
         if let Err(err) = Command::from_tool(name, &json!({})) {
@@ -270,4 +270,41 @@ fn csv_import_is_all_or_nothing_and_label_is_confined() {
     )
     .is_err());
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn hired_event_records_a_reminder_and_does_not_invent_an_asset() {
+    let mut c = ctx("hired");
+    let hired = json!({
+        "candidate_id": "C-1",
+        "name": "Ada",
+        "salary_eur": 70000
+    });
+    c.bus
+        .emit("hirecraft", "assetcraft", "candidate.hired", hired.clone())
+        .unwrap();
+    c.bus
+        .emit("hirecraft", "assetcraft", "candidate.hired", hired)
+        .unwrap();
+    c.bus
+        .emit(
+            "hirecraft",
+            "assetcraft",
+            "candidate.hired",
+            json!({ "name": "Ada" }),
+        )
+        .unwrap();
+    let result = call(&mut c, "asset_drain_inbox", json!({})).unwrap();
+    assert_eq!(result["processed"], 3);
+    assert_eq!(result["rejected"], 1);
+    assert_eq!(result["created"].as_array().unwrap().len(), 1);
+    let open = c.reg.deadlines(false).unwrap();
+    assert_eq!(open.len(), 1);
+    assert_eq!(open[0].kind, "other");
+    assert!(open[0].notes.contains("hire:C-1"));
+    assert!(open[0].notes.contains("cost unknown"));
+    let listed = call(&mut c, "asset_list", json!({})).unwrap();
+    assert_eq!(listed["assets"].as_array().unwrap().len(), 0);
+    assert!(c.bus.pending("assetcraft").unwrap().is_empty());
+    let _ = std::fs::remove_dir_all(c.bus.root());
 }

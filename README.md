@@ -1,5 +1,10 @@
 # assetcraft
 
+![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)
+![Rust 1.90+](https://img.shields.io/badge/rust-1.90%2B-orange?logo=rust)
+![MCP stdio](https://img.shields.io/badge/MCP-stdio-purple)
+![ArtCraft harness](https://img.shields.io/badge/ArtCraft-harness-green)
+
 Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).
 
 Status: **v0.1.1, Tier 1** (store + CLI + MCP, tested). No desktop window yet. Synthetic demo data only; AfA rules not reviewed by a Steuerberater.
@@ -45,7 +50,7 @@ Database: `--db PATH`, else `$ASSETCRAFT_DB`, else `%LOCALAPPDATA%\assetcraft\as
 { "mcpServers": { "assetcraft": { "command": "D:/Dev/cargo-target/release/assetcraft.exe", "args": ["mcp", "--allow-path", "D:/Dev/assetcraft-files"] } } }
 ```
 
-24 tools, all `asset_*`; see [docs/TOOLS.md](docs/TOOLS.md).
+25 tools, all `asset_*`; see [docs/TOOLS.md](docs/TOOLS.md).
 
 ## Build
 
