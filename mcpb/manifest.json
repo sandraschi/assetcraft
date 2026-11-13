@@ -122,6 +122,10 @@
       "description": "Import assets from CSV tag;name;category;in_service;cost[;serial;location;holder]. All-or-nothing; dry_run validates only."
     },
     {
+      "name": "asset_drain_inbox",
+      "description": "Record one equipment reminder per hirecraft candidate.hired event. No asset and no cost are invented."
+    },
+    {
       "name": "asset_demo_seed",
       "description": "Fill an EMPTY register with a labelled demo inventory, licences and deadlines."
     }
