@@ -5,6 +5,16 @@
 ![MCP stdio](https://img.shields.io/badge/MCP-stdio-purple)
 ![ArtCraft harness](https://img.shields.io/badge/ArtCraft-harness-green)
 
+## Install
+
+Tell Cursor, Claude, Antigravity, or OpenCode: **Install this.**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-craft.ps1
+```
+
+Installs the Windows app, the CLI, and the MCP bundle.
+
 Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).
 
 Status: **v0.1.1, Tier 1** (store + CLI + MCP, tested). No desktop window yet. Synthetic demo data only; AfA rules not reviewed by a Steuerberater.
