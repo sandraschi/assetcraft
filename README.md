@@ -1,9 +1,23 @@
 # assetcraft
 
+## Screenshots, Demo Videos & Walkthroughs
+
+> **Under Construction:** Full `egui` screenshots, demo videos, and interactive walkthroughs are currently under construction.
+
 ![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)
 ![Rust 1.90+](https://img.shields.io/badge/rust-1.90%2B-orange?logo=rust)
 ![MCP stdio](https://img.shields.io/badge/MCP-stdio-purple)
 ![ArtCraft harness](https://img.shields.io/badge/ArtCraft-harness-green)
+
+## Install
+
+Tell Cursor, Claude, Antigravity, or OpenCode: **Install this.**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-craft.ps1
+```
+
+Installs the Windows app, the CLI, and the MCP bundle.
 
 Fixed assets with Austrian AfA, software licences and expiry dates for a small business. One SQLite file, one binary that is both CLI and MCP server. Part of the back-office craft suite (replaces the asset Excel, the licence spreadsheet and the calendar reminders for certificates and Pickerl).
 
