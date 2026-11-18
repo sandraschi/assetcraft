@@ -93,6 +93,7 @@ struct AppState {
     bar: Bar,
     dark: bool,
     zoom: f32,
+    lang_de: bool,
     new_tag: String,
     new_name: String,
     new_category: String,
@@ -130,6 +131,7 @@ impl AppState {
             bar: Bar::new(),
             dark: true,
             zoom: 1.0,
+            lang_de: false,
             new_tag: String::new(),
             new_name: String::new(),
             new_category: "it".into(),
@@ -297,20 +299,24 @@ impl AppState {
             docs: &docs,
             dark: self.dark,
             zoom: self.zoom,
+            lang_de: self.lang_de,
             file: vec![
-                Item::action("Load demo inventory", "app.demo"),
-                Item::action("Refresh", "app.refresh"),
+                Item::action(
+                    bookend::t(self.lang_de, "Demo-Inventar laden", "Load demo inventory"),
+                    "app.demo",
+                ),
+                Item::action(bookend::t(self.lang_de, "Aktualisieren", "Refresh"), "app.refresh"),
             ],
             view: vec![
-                Item::action("Assets", "view.assets")
+                Item::action(bookend::t(self.lang_de, "Anlagen", "Assets"), "view.assets")
                     .checked(self.current_tab == ActiveTab::Assets),
-                Item::action("Depreciation", "view.afa")
+                Item::action(bookend::t(self.lang_de, "Abschreibung", "Depreciation"), "view.afa")
                     .checked(self.current_tab == ActiveTab::AfaDepreciation),
-                Item::action("Licenses", "view.licenses")
+                Item::action(bookend::t(self.lang_de, "Lizenzen", "Licenses"), "view.licenses")
                     .checked(self.current_tab == ActiveTab::Licenses),
-                Item::action("Labels", "view.labels")
+                Item::action(bookend::t(self.lang_de, "Etiketten", "Labels"), "view.labels")
                     .checked(self.current_tab == ActiveTab::Labels),
-                Item::action("Expiries", "view.expiries")
+                Item::action(bookend::t(self.lang_de, "Fristen", "Expiries"), "view.expiries")
                     .checked(self.current_tab == ActiveTab::Expiries),
             ],
             middle: Vec::new(),
@@ -321,6 +327,9 @@ impl AppState {
         }
         if let Some(zoom) = change.zoom {
             self.zoom = zoom;
+        }
+        if let Some(lang_de) = change.lang_de {
+            self.lang_de = lang_de;
         }
         match change.action.as_deref() {
             Some("app.refresh") => self.reload_data(),
@@ -516,7 +525,7 @@ impl AppState {
         ui.columns(2, |cols| {
             // Left Column: Asset Registry List
             cols[0].group(|ui| {
-                ui.heading("Hardware & Asset Inventory");
+                ui.heading(bookend::t(self.lang_de, "Anlagen und Inventar", "Hardware & Asset Inventory"));
                 ui.horizontal(|ui| {
                     ui.label("Tag");
                     ui.add(egui::TextEdit::singleline(&mut self.new_tag).desired_width(70.0));
@@ -576,7 +585,11 @@ impl AppState {
 
             // Right Column: Asset Details & Maintenance Drawer
             cols[1].group(|ui| {
-                ui.heading("Asset Details & Maintenance");
+                ui.heading(bookend::t(
+                    self.lang_de,
+                    "Anlage und Wartung",
+                    "Asset Details & Maintenance",
+                ));
                 ui.add_space(4.0);
 
                 if let Some(ref a) = self.selected_asset {
@@ -615,7 +628,7 @@ impl AppState {
                     }
 
                     ui.separator();
-                    ui.heading("Maintenance History");
+                    ui.heading(bookend::t(self.lang_de, "Wartungsverlauf", "Maintenance History"));
                     ui.horizontal(|ui| {
                         ui.label("Kind");
                         ui.add(egui::TextEdit::singleline(&mut self.maint_kind).desired_width(80.0));
@@ -802,7 +815,11 @@ impl AppState {
     }
 
     fn render_expiries(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Warranties, certificates, domains, insurance, and inspections");
+        ui.heading(bookend::t(
+            self.lang_de,
+            "Garantien, Zertifikate, Domains, Versicherungen und Prüfungen",
+            "Warranties, certificates, domains, insurance, and inspections",
+        ));
         ui.horizontal(|ui| {
             ui.label("Name");
             ui.add(egui::TextEdit::singleline(&mut self.dl_name).desired_width(180.0));
@@ -844,7 +861,11 @@ impl AppState {
 
     fn render_afa(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            ui.heading("Austrian AfA (Absetzung für Abnutzung) Linear Depreciation Cockpit");
+            ui.heading(bookend::t(
+            self.lang_de,
+            "AfA-Cockpit (lineare Absetzung für Abnutzung)",
+            "Austrian AfA (Absetzung für Abnutzung) Linear Depreciation Cockpit",
+        ));
             ui.separator();
             if let Some(ref a) = self.selected_asset {
                 ui.label(format!("Viewing Asset: {} - {}", a.tag, a.name));
@@ -931,7 +952,11 @@ impl AppState {
     }
 
     fn render_licenses(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Software Licenses, Subscriptions & Seat Allocation");
+        ui.heading(bookend::t(
+            self.lang_de,
+            "Softwarelizenzen, Abos und Sitzverteilung",
+            "Software Licenses, Subscriptions & Seat Allocation",
+        ));
         ui.horizontal(|ui| {
             ui.label("Name");
             ui.add(egui::TextEdit::singleline(&mut self.lic_name).desired_width(140.0));
@@ -1024,7 +1049,11 @@ impl AppState {
     }
 
     fn render_labels(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Printable Asset Tags & Barcode Preview");
+        ui.heading(bookend::t(
+            self.lang_de,
+            "Druckbare Anlagenschilder und Barcode-Vorschau",
+            "Printable Asset Tags & Barcode Preview",
+        ));
         ui.label("Generates QR codes compliant with `ASSET:<tag>` format for mobile scan intake and audit checks.");
 
         ui.add_space(8.0);
